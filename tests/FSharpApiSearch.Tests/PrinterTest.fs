@@ -58,7 +58,9 @@ let printAccessPathTest = parameterize {
   run (fun (input, depth, expected) -> test {
     let name = Name.ofString input
     let sb = System.Text.StringBuilder()
-    do FSharpImpl.printAccessPath depth name sb |> ignore
+    use writer = new System.IO.StringWriter(sb)
+    let printer = FSharp.printer writer (NullHandler())
+    do FSharpImpl.printAccessPath depth name printer |> ignore
     let actual = sb.ToString()
     do! actual |> assertEquals expected
   })

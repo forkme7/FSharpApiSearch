@@ -7,6 +7,7 @@ open System.IO
 open FSharpApiSearch
 open FSharpApiSearch.Printer
 open System.Reflection
+open System.Text
 
 let assemblyName = @"SearchTestAssembly"
 let assemblyPath =
@@ -30,7 +31,14 @@ let searchTest = parameterize {
     let! client = testClient
     let actual =
       client.Search(query, TestHelper.defaultTestOptions)
-      |> Seq.map (fun x -> FSharp.printFullName x.Api) |> Seq.toList |> List.sort
+      |> Seq.map (fun x ->
+        let sb = StringBuilder()
+        let printer = FSharp.printer (new StringWriter(sb)) (NullHandler())
+        FSharp.printFullName printer x.Api
+        sb.ToString()
+      )
+      |> Seq.toList
+      |> List.sort
     do! actual |> assertEquals (List.sort expecteds)
   })
 }

@@ -369,6 +369,7 @@ with
     | ApiSignature.ExtensionMember _ -> ApiKind.ExtensionMember
     | ApiSignature.UnionCase _ -> ApiKind.UnionCase
     | ApiSignature.ComputationExpressionBuilder _ -> ApiKind.ComputationExpressionBuilder
+  member this.HasTypeConstraints = this.TypeConstraints.IsEmpty = false
 
 type ApiDictionary = {
   AssemblyName: string

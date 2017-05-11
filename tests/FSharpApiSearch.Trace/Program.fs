@@ -6,6 +6,7 @@ open FSharpApiSearch.Console
 open System
 open System.Diagnostics
 open System.IO
+open System.Text
 
 let assemblyResolver: AssemblyLoader.AssemblyResolver = {
   FSharpCore = Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Reference Assemblies\Microsoft\FSharp\.NETFramework\v4.0\4.4.0.0\")
@@ -41,7 +42,13 @@ let main argv =
         Console.Write("> ");
         let targetName = Console.ReadLine()
 
-        let target = apis |> Array.find (fun x -> FSharp.printFullName x = targetName)
+        let target =
+          apis
+          |> Array.find (fun x ->
+            let sb = StringBuilder()
+            let printer = FSharp.printer (new StringWriter(sb)) (NullHandler())
+            FSharp.printFullName printer x |> ignore
+            sb.ToString() = targetName)
         let dummyDict: ApiDictionary = { AssemblyName = "dummy"; Api = [| target |]; TypeDefinitions = [||]; TypeAbbreviations = [||] }
         let result = Matcher.search dictionaries options [ dummyDict ] query
 

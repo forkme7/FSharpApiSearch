@@ -7,19 +7,30 @@ open System
 open System.IO
 open Microsoft.FSharp.Compiler.SourceCodeServices
 
+let fsharpPrinterHandler =
+  { new IPrinterHandler<TextWriter> with
+      member this.BeginPrintType _ = Console.ForegroundColor <- ConsoleColor.DarkGreen
+      member this.EndPrintType _ = Console.ResetColor()
+  }
 let fsharpPrinter (result: Result) =
+  let printer = FSharp.printer Console.Out fsharpPrinterHandler
   Console.ForegroundColor <- ConsoleColor.DarkGray
-  Console.Write(FSharp.printAccessPath None result.Api)
-  Console.Write(".")
+  FSharp.printAccessPath printer None result.Api
+  printer.Write(".")
   Console.ResetColor()
-  Console.Write(FSharp.printApiName result.Api)
-  Console.Write(" : ")
-  Console.Write(FSharp.printSignature result.Api)
+  FSharp.printApiName printer result.Api
+  printer.Write(" : ")
+  FSharp.printSignature printer result.Api
   Console.ForegroundColor <- ConsoleColor.DarkGray
-  Console.WriteLine(sprintf ", %s, %s" (FSharp.printKind result.Api) result.AssemblyName)
-  match FSharp.tryPrintTypeConstraints result.Api with
-  | Some constraints -> Console.WriteLine(sprintf "  %s" constraints)
-  | None -> ()
+  printer.Write(", ")
+  FSharp.printKind printer result.Api
+  printer.Write(", ")
+  printer.Write(result.AssemblyName)
+  printer.WriteLine()
+  if result.Api.HasTypeConstraints then
+    printer.Write("  ")
+    FSharp.printTypeConstraints printer result.Api
+    printer.WriteLine()
   Console.ResetColor()
   
 let csharpPrinter (result: Result) =
